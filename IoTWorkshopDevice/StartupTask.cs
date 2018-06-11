@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using Newtonsoft.Json;
 using GrovePi.I2CDevices;
+using Microsoft.Azure.Devices.Shared;
 
 namespace IoTWorkshopDevice
 {
@@ -54,7 +55,7 @@ namespace IoTWorkshopDevice
             ///**********************************************
             //    Placeholder: IoT Hub create connection
             //***********************************************/
-            deviceClient = DeviceClient.Create( iotHubUri, new DeviceAuthenticationWithRegistrySymmetricKey( deviceId, deviceKey ), TransportType.Amqp );
+            deviceClient = DeviceClient.Create( iotHubUri, new DeviceAuthenticationWithRegistrySymmetricKey( deviceId, deviceKey ), TransportType.Mqtt );
 
             ///**********************************************
             //    Placeholder: Threadpool create telemetry timer
