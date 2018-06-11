@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using Windows.ApplicationModel.Background;
 using Windows.System.Threading;
@@ -20,7 +18,7 @@ namespace IoTWorkshopDevice
         private BackgroundTaskDeferral deferral;
         static ThreadPoolTimer timer;
         static DeviceClient deviceClient;
-        const int HEARTBEAT_FREQUENCY = 5;
+        static int sendFrequency = 5;
 
         ///**********************************************
         //    Placeholder: Peripherals
@@ -36,6 +34,11 @@ namespace IoTWorkshopDevice
         static readonly string iotHubUri = "<IoT Hub URI here>";
         static readonly string deviceKey = "<IoT Hub Device Key here>";
         static readonly string deviceId = "<IoT Hub Device Id here>";
+
+        ///**********************************************
+        //    Placeholder: Device twin
+        //***********************************************/
+        static TwinCollection reportedProperties = new TwinCollection();
 
         public async void Run( IBackgroundTaskInstance taskInstance )
         {
@@ -58,11 +61,20 @@ namespace IoTWorkshopDevice
             deviceClient = DeviceClient.Create( iotHubUri, new DeviceAuthenticationWithRegistrySymmetricKey( deviceId, deviceKey ), TransportType.Mqtt );
 
             ///**********************************************
+            //    Placeholder: Device twin
+            //***********************************************/
+            InitTwinTelemetry();
+            deviceClient.SetDesiredPropertyUpdateCallbackAsync( OnDesiredPropertyChanged, null ).Wait();
+
+            ///**********************************************
             //    Placeholder: Threadpool create telemetry timer
             //***********************************************/
-            timer = ThreadPoolTimer.CreatePeriodicTimer( Timer_Tick, TimeSpan.FromSeconds( HEARTBEAT_FREQUENCY ) );
+            timer = ThreadPoolTimer.CreatePeriodicTimer( Timer_Tick, TimeSpan.FromSeconds( sendFrequency ) );
         }
 
+        ///**********************************************
+        //    Placeholder: Threadpool create telemetry timer
+        //***********************************************/
         private async void Timer_Tick( ThreadPoolTimer timer )
         {
             ///**********************************************
@@ -91,7 +103,7 @@ namespace IoTWorkshopDevice
         /**********************************************
         //  Placeholder: Send telemetry to the cloud
         ***********************************************/
-        private static async Task SendDeviceToCloudMessagesAsync( double temperature, double humidity )
+        private async Task SendDeviceToCloudMessagesAsync( double temperature, double humidity )
         {
             // Create telemetry payload
             var telemetryDataPoint = new
@@ -114,7 +126,7 @@ namespace IoTWorkshopDevice
         /**********************************************
         //  Placeholder: Receive messages from the cloud
         ***********************************************/
-        private static async Task ReceiveCloudToDeviceMessageAsync()
+        private async Task ReceiveCloudToDeviceMessageAsync()
         {
             // Pull message from C2D queue
             var receivedMessage = await deviceClient.ReceiveAsync();
@@ -126,6 +138,70 @@ namespace IoTWorkshopDevice
                 // Mark message as received in the C2D queue
                 await deviceClient.CompleteAsync( receivedMessage );
             }
+        }
+
+        ///**********************************************
+        //    Placeholder: Device twin (init)
+        //***********************************************/
+        private async void InitTwinTelemetry()
+        {
+            Debug.WriteLine( "Report initial twin telemetry config:" );
+
+            var telemetryConfig = new TwinCollection();
+
+            telemetryConfig["configId"] = "0";
+            telemetryConfig["sendFrequency"] = sendFrequency;
+            reportedProperties["telemetryConfig"] = telemetryConfig;
+
+            Debug.WriteLine( JsonConvert.SerializeObject( reportedProperties ) );
+
+            await deviceClient.UpdateReportedPropertiesAsync( reportedProperties );
+        }
+
+        ///**********************************************
+        //    Placeholder: Device twin (desired)
+        //***********************************************/
+        private async Task OnDesiredPropertyChanged( TwinCollection desiredProperties, object userContext )
+        {
+            Debug.WriteLine( "Desired property change:" );
+            Debug.WriteLine( JsonConvert.SerializeObject( desiredProperties ) );
+
+            var currentTelemetryConfig = reportedProperties["telemetryConfig"];
+            var desiredTelemetryConfig = desiredProperties["telemetryConfig"];
+
+            if ( (desiredTelemetryConfig != null) && (desiredTelemetryConfig["configId"] != currentTelemetryConfig["configId"]) )
+            {
+                Debug.WriteLine( "\nInitiating config change" );
+
+                currentTelemetryConfig["status"] = "Pending";
+                currentTelemetryConfig["pendingConfig"] = desiredTelemetryConfig;
+
+                await deviceClient.UpdateReportedPropertiesAsync( reportedProperties );
+
+                CompleteConfigChange();
+            }
+        }
+
+        ///**********************************************
+        //    Placeholder: Device twin (reported)
+        //***********************************************/
+        private async void CompleteConfigChange()
+        {
+            var currentTelemetryConfig = reportedProperties["telemetryConfig"];
+
+            Debug.WriteLine( "\nCompleting config change" );
+
+            currentTelemetryConfig["configId"] = currentTelemetryConfig["pendingConfig"]["configId"];
+            currentTelemetryConfig["sendFrequency"] = currentTelemetryConfig["pendingConfig"]["sendFrequency"];
+            currentTelemetryConfig["status"] = "Success";
+            currentTelemetryConfig["pendingConfig"] = null;
+
+            //Cancel and reset out perdioc timer
+            sendFrequency = currentTelemetryConfig["sendFrequency"];
+            timer.Cancel();
+            timer = ThreadPoolTimer.CreatePeriodicTimer( Timer_Tick, TimeSpan.FromSeconds( sendFrequency ) );
+
+            await deviceClient.UpdateReportedPropertiesAsync( reportedProperties );
         }
     }
 }
