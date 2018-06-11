@@ -106,6 +106,8 @@
     <None Include="IoTWorkshopDevice_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Images\GrovePi.jpg" />
+    <Content Include="Images\WorkshopBoard.png" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png">
       <InProject>false</InProject>
