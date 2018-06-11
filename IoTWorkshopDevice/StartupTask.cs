@@ -29,16 +29,16 @@ namespace IoTWorkshopDevice
         ITemperatureAndHumiditySensor tempSensor;
 
         ///**********************************************
-        //    Placeholder: IoT Hub Connection Info
+        //    Placeholder (Exercise 1): IoT Hub Connection Info
         //***********************************************/
         static readonly string iotHubUri = "<IoT Hub URI here>";
         static readonly string deviceKey = "<IoT Hub Device Key here>";
         static readonly string deviceId = "<IoT Hub Device Id here>";
 
         ///**********************************************
-        //    Placeholder: Device twin
+        //    Placeholder (Exercise 5): Device twin
         //***********************************************/
-        static TwinCollection reportedProperties = new TwinCollection();
+        //static TwinCollection reportedProperties = new TwinCollection();
 
         public async void Run( IBackgroundTaskInstance taskInstance )
         {
@@ -48,177 +48,177 @@ namespace IoTWorkshopDevice
             deferral = taskInstance.GetDeferral();
 
             ///**********************************************
-            //    Placeholder: Find peripherals
+            //    Placeholder (Exercise 1): Find peripherals
             //***********************************************/
-            buzzer = DeviceFactory.Build.Buzzer( Pin.DigitalPin2 );
-            lcd = DeviceFactory.Build.RgbLcdDisplay();
-            tempSensor = DeviceFactory.Build.TemperatureAndHumiditySensor( Pin.AnalogPin1, Model.Dht11 );
-            rotarySensor = DeviceFactory.Build.RotaryAngleSensor( Pin.AnalogPin2 );
+            //buzzer = DeviceFactory.Build.Buzzer( Pin.DigitalPin2 );
+            //lcd = DeviceFactory.Build.RgbLcdDisplay();
+            //tempSensor = DeviceFactory.Build.TemperatureAndHumiditySensor( Pin.AnalogPin1, Model.Dht11 );
+            //rotarySensor = DeviceFactory.Build.RotaryAngleSensor( Pin.AnalogPin2 );
 
             ///**********************************************
-            //    Placeholder: IoT Hub create connection
+            //    Placeholder (Exercise 1): IoT Hub create connection
             //***********************************************/
-            deviceClient = DeviceClient.Create( iotHubUri, new DeviceAuthenticationWithRegistrySymmetricKey( deviceId, deviceKey ), TransportType.Mqtt );
+            //deviceClient = DeviceClient.Create( iotHubUri, new DeviceAuthenticationWithRegistrySymmetricKey( deviceId, deviceKey ), TransportType.Mqtt );
 
             ///**********************************************
-            //    Placeholder: Direct Method callback
+            //    Placeholder (Exercise 3): Direct Method callback
             //***********************************************/
-            deviceClient.SetMethodHandlerAsync("senddiagnostics", SendDiagnostics, null).Wait();
+            //deviceClient.SetMethodHandlerAsync("senddiagnostics", SendDiagnostics, null).Wait();
 
             ///**********************************************
-            //    Placeholder: Device twin
+            //    Placeholder (Exercise 5): Device twin
             //***********************************************/
-            InitTwinTelemetry();
-            deviceClient.SetDesiredPropertyUpdateCallbackAsync( OnDesiredPropertyChanged, null ).Wait();
+            //InitTwinTelemetry();
+            //deviceClient.SetDesiredPropertyUpdateCallbackAsync( OnDesiredPropertyChanged, null ).Wait();
 
             ///**********************************************
-            //    Placeholder: Threadpool create telemetry timer
+            //    Threadpool create telemetry timer
             //***********************************************/
             timer = ThreadPoolTimer.CreatePeriodicTimer( Timer_Tick, TimeSpan.FromSeconds( sendFrequency ) );
         }
 
         ///**********************************************
-        //    Placeholder: Threadpool create telemetry timer
+        //    Threadpool create telemetry timer
         //***********************************************/
         private async void Timer_Tick( ThreadPoolTimer timer )
         {
             ///**********************************************
-            //    Placeholder: Get sensor data and update LCD
+            //    Placeholder (Exercise 1): Get sensor data and update LCD
             //***********************************************/
-            buzzer?.ChangeState( SensorStatus.Off );
+            //buzzer?.ChangeState( SensorStatus.Off );
 
-            var currentTemp = ConvertTemp.ConvertCelsiusToFahrenheit( tempSensor.TemperatureInCelsius() );
-            var rgbVal = Convert.ToByte( rotarySensor.SensorValue() / 4 );
+            //var currentTemp = ConvertTemp.ConvertCelsiusToFahrenheit( tempSensor.TemperatureInCelsius() );
+            //var rgbVal = Convert.ToByte( rotarySensor.SensorValue() / 4 );
 
-            var sensorText = "Temp: " + currentTemp.ToString( "F" ) + "     Now:  " + DateTime.Now.ToString( "H:mm:ss" );
-            Debug.WriteLine( "{0} > Sensor text: {1}", DateTime.Now, sensorText );
-            lcd.SetText( sensorText ).SetBacklightRgb( 124, rgbVal, 65 );
+            //var sensorText = "Temp: " + currentTemp.ToString( "F" ) + "     Now:  " + DateTime.Now.ToString( "H:mm:ss" );
+            //Debug.WriteLine( "{0} > Sensor text: {1}", DateTime.Now, sensorText );
+            //lcd.SetText( sensorText ).SetBacklightRgb( 124, rgbVal, 65 );
 
             ///**********************************************
-            //    Placeholder: Send telemetry to the cloud
+            //    Placeholder (Exercise 2): Send telemetry to the cloud
             //***********************************************/
-            await SendDeviceToCloudMessagesAsync( currentTemp, 32 );
+            //await SendDeviceToCloudMessagesAsync( currentTemp, 32 );
 
             ///**********************************************
-            //    Placeholder: Receive messages from the cloud
+            //    Placeholder (Exercise 4): Receive messages from the cloud
             //***********************************************/
-            await ReceiveCloudToDeviceMessageAsync();
+            //await ReceiveCloudToDeviceMessageAsync();
         }
 
         /**********************************************
-        //  Placeholder: Send telemetry to the cloud
+        //  Placeholder (Exercise 2): Send telemetry to the cloud
         ***********************************************/
-        private async Task SendDeviceToCloudMessagesAsync( double temperature, double humidity )
-        {
-            // Create telemetry payload
-            var telemetryDataPoint = new
-            {
-                deviceId,
-                temperature,
-                humidity,
-            };
+        //private async Task SendDeviceToCloudMessagesAsync( double temperature, double humidity )
+        //{
+        //    // Create telemetry payload
+        //    var telemetryDataPoint = new
+        //    {
+        //        deviceId,
+        //        temperature,
+        //        humidity,
+        //    };
 
-            // Serialize into a message
-            string messageString = JsonConvert.SerializeObject( telemetryDataPoint );
-            Message message = new Message( Encoding.ASCII.GetBytes( messageString ) );
+        //    // Serialize into a message
+        //    string messageString = JsonConvert.SerializeObject( telemetryDataPoint );
+        //    Message message = new Message( Encoding.ASCII.GetBytes( messageString ) );
 
-            // Send
-            await deviceClient.SendEventAsync( message );
+        //    // Send
+        //    await deviceClient.SendEventAsync( message );
 
-            Debug.WriteLine( "{0} > Sent message: {1}", DateTime.Now, messageString );
-        }
+        //    Debug.WriteLine( "{0} > Sent message: {1}", DateTime.Now, messageString );
+        //}
 
         /**********************************************
-        //  Placeholder: Receive messages from the cloud
+        //  Placeholder (Exercise 4): Receive messages from the cloud
         ***********************************************/
-        private async Task ReceiveCloudToDeviceMessageAsync()
-        {
-            // Pull message from C2D queue
-            var receivedMessage = await deviceClient.ReceiveAsync();
+        //private async Task ReceiveCloudToDeviceMessageAsync()
+        //{
+        //    // Pull message from C2D queue
+        //    var receivedMessage = await deviceClient.ReceiveAsync();
 
-            if ( receivedMessage != null )
-            {
-                Debug.WriteLine( "{0} > Received message: {1}", DateTime.Now, Encoding.ASCII.GetString( receivedMessage.GetBytes() ) );
+        //    if ( receivedMessage != null )
+        //    {
+        //        Debug.WriteLine( "{0} > Received message: {1}", DateTime.Now, Encoding.ASCII.GetString( receivedMessage.GetBytes() ) );
 
-                // Mark message as received in the C2D queue
-                await deviceClient.CompleteAsync( receivedMessage );
-            }
-        }
+        //        // Mark message as received in the C2D queue
+        //        await deviceClient.CompleteAsync( receivedMessage );
+        //    }
+        //}
 
         /**********************************************
-        //  Placeholder: Direct Method callback
+        //  Placeholder (Exercise 3): Direct Method callback
         ***********************************************/
-        private Task<MethodResponse> SendDiagnostics(MethodRequest methodRequest, object userContext )
-        {
-            Debug.WriteLine( "\t{0}", methodRequest.DataAsJson );
-            Debug.WriteLine( "\nReturning response for method {0}", methodRequest.Name );
+        //private Task<MethodResponse> SendDiagnostics(MethodRequest methodRequest, object userContext )
+        //{
+        //    Debug.WriteLine( "\t{0}", methodRequest.DataAsJson );
+        //    Debug.WriteLine( "\nReturning response for method {0}", methodRequest.Name );
 
-            string result = "'Doing great here!!!'";
-            return Task.FromResult( new MethodResponse( Encoding.UTF8.GetBytes( result ), 200 ) );
-        }
-
-        ///**********************************************
-        //    Placeholder: Device twin (init)
-        //***********************************************/
-        private async void InitTwinTelemetry()
-        {
-            Debug.WriteLine( "Report initial twin telemetry config:" );
-
-            var telemetryConfig = new TwinCollection();
-
-            telemetryConfig["configId"] = "0";
-            telemetryConfig["sendFrequency"] = sendFrequency;
-            reportedProperties["telemetryConfig"] = telemetryConfig;
-
-            Debug.WriteLine( JsonConvert.SerializeObject( reportedProperties ) );
-
-            await deviceClient.UpdateReportedPropertiesAsync( reportedProperties );
-        }
+        //    string result = "'Doing great here!!!'";
+        //    return Task.FromResult( new MethodResponse( Encoding.UTF8.GetBytes( result ), 200 ) );
+        //}
 
         ///**********************************************
-        //    Placeholder: Device twin (desired)
+        //    Placeholder (Exercise 5): Device twin (init)
         //***********************************************/
-        private async Task OnDesiredPropertyChanged( TwinCollection desiredProperties, object userContext )
-        {
-            Debug.WriteLine( "Desired property change:" );
-            Debug.WriteLine( JsonConvert.SerializeObject( desiredProperties ) );
+        //private async void InitTwinTelemetry()
+        //{
+        //    Debug.WriteLine( "Report initial twin telemetry config:" );
 
-            var currentTelemetryConfig = reportedProperties["telemetryConfig"];
-            var desiredTelemetryConfig = desiredProperties["telemetryConfig"];
+        //    var telemetryConfig = new TwinCollection();
 
-            if ( (desiredTelemetryConfig != null) && (desiredTelemetryConfig["configId"] != currentTelemetryConfig["configId"]) )
-            {
-                Debug.WriteLine( "\nInitiating config change" );
+        //    telemetryConfig["configId"] = "0";
+        //    telemetryConfig["sendFrequency"] = sendFrequency;
+        //    reportedProperties["telemetryConfig"] = telemetryConfig;
 
-                currentTelemetryConfig["status"] = "Pending";
-                currentTelemetryConfig["pendingConfig"] = desiredTelemetryConfig;
+        //    Debug.WriteLine( JsonConvert.SerializeObject( reportedProperties ) );
 
-                await deviceClient.UpdateReportedPropertiesAsync( reportedProperties );
-
-                CompleteConfigChange();
-            }
-        }
+        //    await deviceClient.UpdateReportedPropertiesAsync( reportedProperties );
+        //}
 
         ///**********************************************
-        //    Placeholder: Device twin (reported)
+        //    Placeholder (Exercise 5): Device twin (desired)
         //***********************************************/
-        private async void CompleteConfigChange()
-        {
-            var currentTelemetryConfig = reportedProperties["telemetryConfig"];
+        //private async Task OnDesiredPropertyChanged( TwinCollection desiredProperties, object userContext )
+        //{
+        //    Debug.WriteLine( "Desired property change:" );
+        //    Debug.WriteLine( JsonConvert.SerializeObject( desiredProperties ) );
 
-            Debug.WriteLine( "\nCompleting config change" );
+        //    var currentTelemetryConfig = reportedProperties["telemetryConfig"];
+        //    var desiredTelemetryConfig = desiredProperties["telemetryConfig"];
 
-            currentTelemetryConfig["configId"] = currentTelemetryConfig["pendingConfig"]["configId"];
-            currentTelemetryConfig["sendFrequency"] = currentTelemetryConfig["pendingConfig"]["sendFrequency"];
-            currentTelemetryConfig["status"] = "Success";
-            currentTelemetryConfig["pendingConfig"] = null;
+        //    if ( (desiredTelemetryConfig != null) && (desiredTelemetryConfig["configId"] != currentTelemetryConfig["configId"]) )
+        //    {
+        //        Debug.WriteLine( "\nInitiating config change" );
 
-            //Cancel and reset out perdioc timer
-            sendFrequency = currentTelemetryConfig["sendFrequency"];
-            timer.Cancel();
-            timer = ThreadPoolTimer.CreatePeriodicTimer( Timer_Tick, TimeSpan.FromSeconds( sendFrequency ) );
+        //        currentTelemetryConfig["status"] = "Pending";
+        //        currentTelemetryConfig["pendingConfig"] = desiredTelemetryConfig;
 
-            await deviceClient.UpdateReportedPropertiesAsync( reportedProperties );
-        }
+        //        await deviceClient.UpdateReportedPropertiesAsync( reportedProperties );
+
+        //        CompleteConfigChange();
+        //    }
+        //}
+
+        ///**********************************************
+        //    Placeholder (Exercise 5): Device twin (reported)
+        //***********************************************/
+        //private async void CompleteConfigChange()
+        //{
+        //    var currentTelemetryConfig = reportedProperties["telemetryConfig"];
+
+        //    Debug.WriteLine( "\nCompleting config change" );
+
+        //    currentTelemetryConfig["configId"] = currentTelemetryConfig["pendingConfig"]["configId"];
+        //    currentTelemetryConfig["sendFrequency"] = currentTelemetryConfig["pendingConfig"]["sendFrequency"];
+        //    currentTelemetryConfig["status"] = "Success";
+        //    currentTelemetryConfig["pendingConfig"] = null;
+
+        //    //Cancel and reset out perdioc timer
+        //    sendFrequency = currentTelemetryConfig["sendFrequency"];
+        //    timer.Cancel();
+        //    timer = ThreadPoolTimer.CreatePeriodicTimer( Timer_Tick, TimeSpan.FromSeconds( sendFrequency ) );
+
+        //    await deviceClient.UpdateReportedPropertiesAsync( reportedProperties );
+        //}
     }
 }
