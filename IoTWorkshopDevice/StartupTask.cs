@@ -61,6 +61,11 @@ namespace IoTWorkshopDevice
             deviceClient = DeviceClient.Create( iotHubUri, new DeviceAuthenticationWithRegistrySymmetricKey( deviceId, deviceKey ), TransportType.Mqtt );
 
             ///**********************************************
+            //    Placeholder: Direct Method callback
+            //***********************************************/
+            deviceClient.SetMethodHandlerAsync("senddiagnostics", SendDiagnostics, null).Wait();
+
+            ///**********************************************
             //    Placeholder: Device twin
             //***********************************************/
             InitTwinTelemetry();
@@ -138,6 +143,18 @@ namespace IoTWorkshopDevice
                 // Mark message as received in the C2D queue
                 await deviceClient.CompleteAsync( receivedMessage );
             }
+        }
+
+        /**********************************************
+        //  Placeholder: Direct Method callback
+        ***********************************************/
+        private Task<MethodResponse> SendDiagnostics(MethodRequest methodRequest, object userContext )
+        {
+            Debug.WriteLine( "\t{0}", methodRequest.DataAsJson );
+            Debug.WriteLine( "\nReturning response for method {0}", methodRequest.Name );
+
+            string result = "'Doing great here!!!'";
+            return Task.FromResult( new MethodResponse( Encoding.UTF8.GetBytes( result ), 200 ) );
         }
 
         ///**********************************************
